@@ -1,6 +1,5 @@
 {
-  "homepage": "https://certusone.github.io/wormhole-nativeswap-example",
-  "name": "NativeSwap",
+  "name": "vellum",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
