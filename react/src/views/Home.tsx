@@ -6,6 +6,9 @@ import {
   Paper,
   TextField,
   Typography,
+  Box,
+  Tabs,
+  Tab
 } from "@material-ui/core";
 import {
   ChainId,
@@ -231,6 +234,39 @@ const SwapButton = ({
   );
 };
 
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function CustomTabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          <Typography>{children}</Typography>
+        </Box>
+      )}
+    </div>
+  );
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `simple-tab-${index}`,
+    'aria-controls': `simple-tabpanel-${index}`,
+  };
+}
+
 export default function Home() {
   const classes = useStyles();
   const [sourceTokenInfo, setSourceTokenInfo] = useState(MATIC_TOKEN_INFO);
@@ -255,6 +291,11 @@ export default function Home() {
   >(undefined);
   const [hasSignedVAA, setHasSignedVAA] = useState(false);
   const [relayerTimeoutString, setRelayerTimeoutString] = useState("");
+  const [tabValue, setTabValue] = useState(0);
+
+  const handleTabChange = (event: React.ChangeEvent<{}>, newValue: any) => {
+    setTabValue(newValue);
+  };
 
   const computeQuote = useCallback(() => {
     (async () => {
@@ -450,84 +491,99 @@ export default function Home() {
     <div className={classes.bg}>
       <Container className={classes.centeredContainer} maxWidth="sm">
         <div className={classes.titleBar}></div>
-        <Typography variant="h4">Vellum Cross-chain Swap Demo</Typography>
+        <Typography variant="h4">Vellum Cross-chain DEX</Typography>
         <div className={classes.spacer} />
         <Paper className={classes.mainPaper}>
-          <Collapse in={!isSourceSwapComplete}>
-            <Settings
-              disabled={disableSelect}
-              slippage={slippage}
-              deadline={deadline}
-              onSlippageChange={handleSlippageChange}
-              onDeadlineChange={handleDeadlineChange}
-            />
-            <TokenSelect
-              tokens={TOKEN_INFOS}
-              value={sourceTokenInfo.name}
-              onChange={handleSourceChange}
-              disabled={disableSelect}
-            ></TokenSelect>
-            <Typography variant="subtitle1">Send</Typography>
-            <TextField
-              type="number"
-              value={amountIn}
-              disabled={disableSelect}
-              InputProps={{ disableUnderline: true }}
-              className={classes.numberField}
-              onChange={handleAmountChange}
-              placeholder="0.0"
-            ></TextField>
-            {parseFloat(amountIn) > sourceTokenInfo.maxAmount ? (
-              <Typography
-                variant="subtitle2"
-                color="error"
-              >{`The max input amount is ${sourceTokenInfo.maxAmount} ${sourceTokenInfo.name}`}</Typography>
-            ) : null}
-            <ConnectedWalletAddress
-              chainId={sourceTokenInfo.chainId}
-              prefix="From:"
-            />
-            <div className={classes.spacer} />
-            <TokenSelect
-              tokens={getSupportedSwaps(sourceTokenInfo)}
-              value={targetTokenInfo.name}
-              onChange={handleTargetChange}
-              disabled={disableSelect}
-            ></TokenSelect>
-            <Typography variant="subtitle1">Receive (estimated)</Typography>
-            <TextField
-              type="number"
-              value={amountOut}
-              autoFocus={true}
-              InputProps={{ disableUnderline: true }}
-              className={classes.numberField}
-              inputProps={{ readOnly: true }}
-              placeholder="0.0"
-            ></TextField>
-            <ConnectedWalletAddress
-              chainId={
-                isEVMChain(sourceTokenInfo.chainId) &&
-                isEVMChain(targetTokenInfo.chainId)
-                  ? sourceTokenInfo.chainId
-                  : targetTokenInfo.chainId
-              }
-              prefix="To:"
-            />
-            <div className={classes.spacer} />
-            <Typography variant="subtitle2">{`Slippage tolerance: ${slippage}%`}</Typography>
-            <Typography variant="subtitle2">{`Relayer fee: ${RELAYER_FEE_UST} USDC`}</Typography>
-            <SwapButton
-              source={sourceTokenInfo}
-              target={targetTokenInfo}
-              disabled={
-                !readyToSwap ||
-                isSwapping ||
-                parseFloat(amountIn) > sourceTokenInfo.maxAmount
-              }
-              showLoader={isSwapping}
-              onClick={handleSwapClick}
-            />
-          </Collapse>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs value={tabValue} onChange={handleTabChange} aria-label="basic tabs example" centered variant="fullWidth">
+              <Tab label="Swap" {...a11yProps(0)} />
+              <Tab label="Liquidity" {...a11yProps(1)} />
+            </Tabs>
+          </Box>
+          <CustomTabPanel value={tabValue} index={0}>
+            <Collapse in={!isSourceSwapComplete}>
+              <Settings
+                disabled={disableSelect}
+                slippage={slippage}
+                deadline={deadline}
+                onSlippageChange={handleSlippageChange}
+                onDeadlineChange={handleDeadlineChange}
+              />
+              <TokenSelect
+                tokens={TOKEN_INFOS}
+                value={sourceTokenInfo.name}
+                onChange={handleSourceChange}
+                disabled={disableSelect}
+              ></TokenSelect>
+              <Typography variant="subtitle1">Send</Typography>
+              <TextField
+                type="number"
+                value={amountIn}
+                disabled={disableSelect}
+                InputProps={{ disableUnderline: true }}
+                className={classes.numberField}
+                onChange={handleAmountChange}
+                placeholder="0.0"
+              ></TextField>
+              {parseFloat(amountIn) > sourceTokenInfo.maxAmount ? (
+                <Typography
+                  variant="subtitle2"
+                  color="error"
+                >{`The max input amount is ${sourceTokenInfo.maxAmount} ${sourceTokenInfo.name}`}</Typography>
+              ) : null}
+              <ConnectedWalletAddress
+                chainId={sourceTokenInfo.chainId}
+                prefix="From:"
+              />
+              <div className={classes.spacer} />
+              <TokenSelect
+                tokens={getSupportedSwaps(sourceTokenInfo)}
+                value={targetTokenInfo.name}
+                onChange={handleTargetChange}
+                disabled={disableSelect}
+              ></TokenSelect>
+              <Typography variant="subtitle1">Receive (estimated)</Typography>
+              <TextField
+                type="number"
+                value={amountOut}
+                autoFocus={true}
+                InputProps={{ disableUnderline: true }}
+                className={classes.numberField}
+                inputProps={{ readOnly: true }}
+                placeholder="0.0"
+              ></TextField>
+              <ConnectedWalletAddress
+                chainId={
+                  isEVMChain(sourceTokenInfo.chainId) &&
+                  isEVMChain(targetTokenInfo.chainId)
+                    ? sourceTokenInfo.chainId
+                    : targetTokenInfo.chainId
+                }
+                prefix="To:"
+              />
+              <div className={classes.spacer} />
+              <Typography variant="subtitle2">{`Slippage tolerance: ${slippage}%`}</Typography>
+              <Typography variant="subtitle2">{`Relayer fee: ${RELAYER_FEE_UST} USDC`}</Typography>
+              <Typography variant="subtitle2">{`~ ~ ~`}</Typography>
+              <Typography variant="subtitle2">{`👉 Tips: Don't let your native tokens be idle. Stake them!💰`}</Typography>
+              {/* <Typography variant="subtitle2">{`by staking native tokens`}</Typography>
+              <Typography variant="subtitle2">{`and participating other DeFi with stETH/sth`}</Typography> */}
+              <SwapButton
+                source={sourceTokenInfo}
+                target={targetTokenInfo}
+                disabled={
+                  !readyToSwap ||
+                  isSwapping ||
+                  parseFloat(amountIn) > sourceTokenInfo.maxAmount
+                }
+                showLoader={isSwapping}
+                onClick={handleSwapClick}
+              />
+            </Collapse>
+          </CustomTabPanel>
+          <CustomTabPanel value={tabValue} index={1}>
+            Cross-chain deposit/staking to highest yield vaults. Coming soon!
+          </CustomTabPanel>
           <Collapse in={isSourceSwapComplete && !isTargetSwapComplete}>
             <div className={classes.loaderHolder}>
               <CircleLoader />
@@ -597,30 +653,6 @@ export default function Home() {
           style={{ margin: "5px" }}
         >
           Mumbai Faucet
-        </Link>
-        <Link
-          href="https://faucet.avax-test.network/"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ margin: "5px" }}
-        >
-          Fuji Faucet
-        </Link>
-        <Link
-          href="https://testnet.binance.org/faucet-smart/"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ margin: "5px" }}
-        >
-          BSC Faucet
-        </Link>
-        <Link
-          href="https://github.com/certusone/wormhole-nativeswap-example/"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ margin: "5px" }}
-        >
-          NativeSwap GitHub
         </Link>
       </Container>
     </div>

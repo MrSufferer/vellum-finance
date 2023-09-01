@@ -74,8 +74,8 @@ export const UST_TOKEN_INFO: TokenInfo = {
 export const TOKEN_INFOS = [
   MATIC_TOKEN_INFO,
   ETH_TOKEN_INFO,
-  AVAX_TOKEN_INFO,
-  BNB_TOKEN_INFO,
+  // AVAX_TOKEN_INFO,
+  // BNB_TOKEN_INFO,
   // TODO: support swaps from/to terra
   // UST_TOKEN_INFO,
 ];
